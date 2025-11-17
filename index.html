@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Tools Platform</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .tool-section { margin-bottom: 40px; border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
+        canvas { border: 1px solid #000; }
+        textarea { width: 100%; height: 200px; }
+        button { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Security Tools Platform</h1>
+    
+    <!-- Image to ASCII Converter -->
+    <div class="tool-section">
+        <h2>Image to ASCII Converter</h2>
+        <input type="file" id="ascii-input" accept="image/*">
+        <button onclick="convertToAscii()">Convert to ASCII</button>
+        <pre id="ascii-output"></pre>
+        <canvas id="ascii-canvas" style="display: none;"></canvas>
+    </div>
+    
+    <!-- Guilloche Pattern Generator -->
+    <div class="tool-section">
+        <h2>Guilloche Pattern Generator</h2>
+        <label>Frequency: <input type="number" id="guilloche-freq" value="10"></label><br>
+        <label>Amplitude: <input type="number" id="guilloche-amp" value="5"></label><br>
+        <button onclick="generateGuilloche()">Generate Guilloche</button>
+        <canvas id="guilloche-canvas" width="400" height="400"></canvas>
+    </div>
+    
+    <!-- 3D Guilloche Pattern Generator (Simplified using Canvas for pseudo-3D) -->
+    <div class="tool-section">
+        <h2>3D Guilloche Pattern Generator</h2>
+        <label>Frequency X: <input type="number" id="3d-guilloche-freq-x" value="8"></label><br>
+        <label>Frequency Y: <input type="number" id="3d-guilloche-freq-y" value="10"></label><br>
+        <label>Depth: <input type="number" id="3d-guilloche-depth" value="5"></label><br>
+        <button onclick="generate3DGuilloche()">Generate 3D Guilloche</button>
+        <canvas id="3d-guilloche-canvas" width="400" height="400"></canvas>
+    </div>
+    
+    <!-- Difficult Security Pattern (Complex Multi-Layer Guilloche with Noise) -->
+    <div class="tool-section">
+        <h2>Hard-to-Forge Security Pattern Generator</h2>
+        <label>Layers: <input type="number" id="security-layers" value="3"></label><br>
+        <label>Complexity: <input type="number" id="security-complexity" value="15"></label><br>
+        <button onclick="generateSecurityPattern()">Generate Security Pattern</button>
+        <canvas id="security-canvas" width="400" height="400"></canvas>
+    </div>
+
+    <script>
+        // Image to ASCII Converter
+        function convertToAscii() {
+            const fileInput = document.getElementById('ascii-input');
+            const output = document.getElementById('ascii-output');
+            const canvas = document.getElementById('ascii-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const width = 80; // Fixed width for ASCII
+                    const height = Math.floor((img.height / img.width) * width * 0.5); // Adjust aspect
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    const imageData = ctx.getImageData(0, 0, width, height);
+                    let ascii = '';
+                    const chars = '@%#*+=-:. '; // Density map
+                    
+                    for (let y = 0; y < height; y++) {
+                        for (let x = 0; x < width; x++) {
+                            const idx = (y * width + x) * 4;
+                            const r = imageData.data[idx];
+                            const g = imageData.data[idx + 1];
+                            const b = imageData.data[idx + 2];
+                            const gray = (r + g + b) / 3;
+                            const charIndex = Math.floor((gray / 255) * (chars.length - 1));
+                            ascii += chars[chars.length - 1 - charIndex];
+                        }
+                        ascii += '\n';
+                    }
+                    output.textContent = ascii;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Guilloche Generator
+        function generateGuilloche() {
+            const canvas = document.getElementById('guilloche-canvas');
+            const ctx = canvas.getContext('2d');
+            const freq = parseInt(document.getElementById('guilloche-freq').value);
+            const amp = parseInt(document.getElementById('guilloche-amp').value);
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 0.5;
+            
+            for (let i = 0; i < 360; i += 1) {
+                ctx.beginPath();
+                for (let j = 0; j < 360; j++) {
+                    const rad = j * Math.PI / 180;
+                    const r = 100 + amp * Math.sin(freq * rad + i * Math.PI / 180);
+                    const x = 200 + r * Math.cos(rad);
+                    const y = 200 + r * Math.sin(rad);
+                    if (j === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+        }
+
+        // 3D Guilloche Generator (Pseudo-3D with shading)
+        function generate3DGuilloche() {
+            const canvas = document.getElementById('3d-guilloche-canvas');
+            const ctx = canvas.getContext('2d');
+            const freqX = parseInt(document.getElementById('3d-guilloche-freq-x').value);
+            const freqY = parseInt(document.getElementById('3d-guilloche-freq-y').value);
+            const depth = parseInt(document.getElementById('3d-guilloche-depth').value);
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let z = 0; z < depth; z++) {
+                ctx.strokeStyle = `rgb(${255 - z * 50}, ${255 - z * 50}, ${255 - z * 50})`;
+                ctx.beginPath();
+                for (let i = 0; i < 400; i++) {
+                    const x = i;
+                    const y = 200 + 50 * Math.sin((x / 400) * 2 * Math.PI * freqX) * Math.sin((z / depth) * 2 * Math.PI * freqY);
+                    if (i === 0) ctx.moveTo(x, y - z * 5); // Offset for 3D effect
+                    else ctx.lineTo(x, y - z * 5);
+                }
+                ctx.stroke();
+            }
+        }
+
+        // Security Pattern Generator (Multi-layer Guilloche with noise)
+        function generateSecurityPattern() {
+            const canvas = document.getElementById('security-canvas');
+            const ctx = canvas.getContext('2d');
+            const layers = parseInt(document.getElementById('security-layers').value);
+            const complexity = parseInt(document.getElementById('security-complexity').value);
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let layer = 0; layer < layers; layer++) {
+                ctx.strokeStyle = `hsl(${layer * 120 / layers}, 100%, 50%)`;
+                ctx.lineWidth = 0.3;
+                ctx.beginPath();
+                for (let i = 0; i < 360; i += 0.5) {
+                    const rad = i * Math.PI / 180;
+                    const r = 100 + 10 * Math.sin(complexity * rad + layer * Math.PI / 2);
+                    const x = 200 + r * Math.cos(rad + layer);
+                    const y = 200 + r * Math.sin(rad + layer);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+            
+            // Add noise for added security complexity
+            for (let i = 0; i < 1000; i++) {
+                const x = Math.random() * 400;
+                const y = Math.random() * 400;
+                ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.1})`;
+                ctx.fillRect(x, y, 1, 1);
+            }
+        }
+    </script>
+</body>
+</html>
